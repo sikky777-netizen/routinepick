@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RoutinePick — Find Your K-Beauty Routine</title>
+  <meta name="description" content="RoutinePick helps you find curated K-beauty cleansers based on your skin type, concerns and routine preferences." />
+  <style>
+    :root{--bg:#f7f6f2;--card:#fff;--ink:#161616;--muted:#6f6f6f;--line:#dedbd2;--accent:#1f4d3f;--soft:#e9f0ec;--gold:#b89b63}
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+    .wrap{width:min(1120px,calc(100% - 32px));margin:auto}.top{display:flex;justify-content:space-between;align-items:center;padding:22px 0}.brand{font-weight:800;letter-spacing:-.03em;font-size:24px}.brand span{color:var(--accent)}
+    .badge{font-size:12px;padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--muted)}
+    .hero{padding:64px 0 38px;display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}.eyebrow{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+    h1{font-size:clamp(42px,7vw,78px);line-height:.98;letter-spacing:-.055em;margin:14px 0 22px}.hero p{font-size:19px;line-height:1.65;color:var(--muted);max-width:680px}.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:12px;padding:14px 18px;font-weight:750;border:1px solid var(--ink);cursor:pointer}.btn.primary{background:var(--ink);color:#fff}.btn.ghost{background:transparent;color:var(--ink)}
+    .hero-card{background:linear-gradient(145deg,#eef3ef,#fff);border:1px solid var(--line);border-radius:28px;padding:28px;min-height:340px;display:flex;flex-direction:column;justify-content:space-between}.score{font-size:54px;font-weight:850;letter-spacing:-.06em}.muted{color:var(--muted)}
+    section{padding:52px 0}.section-title{font-size:34px;letter-spacing:-.035em;margin:0 0 12px}.section-sub{color:var(--muted);margin:0 0 28px;line-height:1.6}.quiz{background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px}.q{margin:0 0 18px}.q label{display:block;font-weight:700;margin-bottom:9px}.options{display:flex;gap:8px;flex-wrap:wrap}.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 13px;cursor:pointer}.chip.active{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:700}.result{margin-top:18px;padding:16px;border-radius:14px;background:var(--soft);display:none}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.product{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;display:flex;flex-direction:column;min-height:280px}.kicker{font-size:12px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.08em}.product h3{font-size:24px;line-height:1.15;letter-spacing:-.03em;margin:10px 0}.tags{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 18px}.tag{font-size:12px;background:#f3f2ee;border-radius:999px;padding:7px 9px;color:#555}.why{color:var(--muted);line-height:1.55;margin:0 0 22px}.product .btn{margin-top:auto}.asin{font-size:11px;color:#999;margin-top:10px}
+    .notice{background:#151515;color:#fff;border-radius:24px;padding:30px}.notice p{color:#cfcfcf;line-height:1.6}.footer{padding:36px 0 56px;color:#777;font-size:12px;line-height:1.6}
+    @media(max-width:800px){.hero{grid-template-columns:1fr;gap:24px;padding-top:40px}.grid{grid-template-columns:1fr}.hero-card{min-height:260px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top"><div class="brand">Routine<span>Pick</span></div><div class="badge">Beta · Amazon US</div></header>
+    <main>
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Curated K-Beauty</div>
+          <h1>Find the routine that fits your skin.</h1>
+          <p>RoutinePick starts small on purpose: a carefully curated set of Korean skincare products, matched to your skin type and cleansing needs — then connected directly to Amazon US.</p>
+          <div class="cta"><a class="btn primary" href="#finder">Find my cleanser</a><a class="btn ghost" href="#picks">Browse current picks</a></div>
+        </div>
+        <div class="hero-card">
+          <div><div class="kicker">RoutinePick Match</div><div class="score">4 curated picks</div><p class="muted">Today’s beta focuses on cleansers. More serums, moisturizers and SPF picks are being added next.</p></div>
+          <div class="muted" style="font-size:13px">No endless catalog. Just a short list with a reason.</div>
+        </div>
+      </section>
+      <section id="finder">
+        <h2 class="section-title">Quick cleanser finder</h2>
+        <p class="section-sub">Answer two quick questions and we’ll point you to the closest match from today’s curated beta list.</p>
+        <div class="quiz">
+          <div class="q"><label>1. What best describes your skin?</label><div class="options" data-group="skin"><button class="chip" data-value="oily">Oily / Combination</button><button class="chip" data-value="sensitive">Sensitive</button><button class="chip" data-value="normal">Normal / Dry</button></div></div>
+          <div class="q"><label>2. What do you want from cleansing?</label><div class="options" data-group="goal"><button class="chip" data-value="daily">Simple daily cleanse</button><button class="chip" data-value="pores">Pore-focused cleanse</button><button class="chip" data-value="oil">Remove sunscreen / makeup</button><button class="chip" data-value="gentle">Gentler feel</button></div></div>
+          <button class="btn primary" id="matchBtn" type="button">Show my match</button>
+          <div class="result" id="result"></div>
+        </div>
+      </section>
+      <section id="picks">
+        <h2 class="section-title">Today’s 4 precision picks</h2>
+        <p class="section-sub">These are the first products linked for RoutinePick Beta. More categories will be added as we verify product pages and availability.</p>
+        <div class="grid">
+          <article class="product" data-id="cosrx">
+            <div class="kicker">Daily gel cleanser</div><h3>COSRX Low pH Good Morning Gel Cleanser</h3>
+            <div class="tags"><span class="tag">Oily / combination</span><span class="tag">Low pH</span><span class="tag">Daily cleanse</span></div>
+            <p class="why">A straightforward pick for people who want a light daily gel cleanser without turning the routine into a 10-step project.</p>
+            <a class="btn primary" rel="sponsored nofollow noopener" target="_blank" href="https://www.amazon.com/COSRX-Good-Morning-Cleanser-150ml/dp/B016NRXO06?crid=2MT0VMWBS2P3Q&dib=eyJ2IjoiMSJ9.NQDiDchfhea2dZ3U7a6Jm0m6OUQqONbFoQdPz7G0pC4kGSmZZLC3L_sycpJNcuY-RKJLMPS62sRC8mtUSmBG2aD_PK8lzU5qq4qYjnfTAGnUpfdCEFh38Y-iiKP2nqoTAbSzXXu7oL-FnmayNCeO2Ool3nlNVrpTDiPMi_-2paw2iy6p6tHGYfkbKqCdflV7lDedG8byFX9r9ZDwKr946C--8MYixx0fItDrlpePOviAOUdIlxXvfeqMvIX33VpdJS6H4pa52fJKMdx-9IEsHwrF_eqgT5rvJ1S0QY0ih4U.OT0TPwPKxI1TCtB1QtUnEqGfqRmbi_QRdb4Nh8GTB-I&dib_tag=se&keywords=cosrx%2Blow%2Bph%2Bgood%2Bmorning%2Bgel%2Bcleanser&qid=1791388830&sprefix=cosrx%2Blow%2Bph%2Bgood%2Bmorning%2Bgel%2Bcleanser%2Caps%2C848&sr=8-1-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&smid=A2E3ILYZ70ZIBL&th=1&linkCode=ll2&tag=routinepick-20&linkId=b8d8bbc918e3868df1cfcccee037b869&language=en_US&gaOptInStatus=true&ref_=as_li_ss_tl">View on Amazon</a>
+            <div class="asin">ASIN B016NRXO06</div>
+          </article>
+          <article class="product" data-id="anuafoam">
+            <div class="kicker">Pore-focused cleanser</div><h3>ANUA Heartleaf Quercetinol Pore Deep Cleansing Foam</h3>
+            <div class="tags"><span class="tag">Oily / combination</span><span class="tag">Pores</span><span class="tag">Foaming cleanse</span></div>
+            <p class="why">Best fit in this beta set for users who specifically want a pore-focused foaming cleanser.</p>
+            <a class="btn primary" rel="sponsored nofollow noopener" target="_blank" href="https://www.amazon.com/dp/B0BVV8BNYJ?utm_source=chatgpt.com&linkCode=ll2&tag=routinepick-20&linkId=8cf297daafa5f7d0e2433f9a85a32f66&language=en_US&gaOptInStatus=true&ref_=as_li_ss_tl">View on Amazon</a>
+            <div class="asin">ASIN B0BVV8BNYJ</div>
+          </article>
+          <article class="product" data-id="anuaoil">
+            <div class="kicker">First cleanse / oil</div><h3>ANUA Heartleaf Pore Control Cleansing Oil</h3>
+            <div class="tags"><span class="tag">Sunscreen removal</span><span class="tag">Makeup removal</span><span class="tag">First cleanse</span></div>
+            <p class="why">Choose this when your main job is removing sunscreen, makeup or heavier daily buildup before a water-based cleanser.</p>
+            <a class="btn primary" rel="sponsored nofollow noopener" target="_blank" href="https://www.amazon.com/dp/B0BN2PX8V3?utm_source=chatgpt.com&th=1&linkCode=ll2&tag=routinepick-20&linkId=effc933712f5379d9adedd3caf9c7481&language=en_US&gaOptInStatus=true&ref_=as_li_ss_tl">View on Amazon</a>
+            <div class="asin">ASIN B0BN2PX8V3</div>
+          </article>
+          <article class="product" data-id="boj">
+            <div class="kicker">Gentle daily cleanser</div><h3>Beauty of Joseon Green Plum Refreshing Cleanser</h3>
+            <div class="tags"><span class="tag">Daily cleanse</span><span class="tag">Gentler feel</span><span class="tag">K-Beauty staple</span></div>
+            <p class="why">A simple alternative when you want a softer-feeling daily cleanser rather than a strongly pore-focused formula.</p>
+            <a class="btn primary" rel="sponsored nofollow noopener" target="_blank" href="https://www.amazon.com/dp/B09N919SS5?utm_source=chatgpt.com&th=1&linkCode=ll2&tag=routinepick-20&linkId=ee3fdf181d8a83297e4899cc0e4e4e84&language=en_US&gaOptInStatus=true&ref_=as_li_ss_tl">View on Amazon</a>
+            <div class="asin">ASIN B09N919SS5</div>
+          </article>
+        </div>
+      </section>
+      <section><div class="notice"><h2 style="margin-top:0">Why RoutinePick is starting small</h2><p>Instead of importing thousands of products before the recommendation logic is useful, RoutinePick is validating a small, reviewed catalog first. The catalog will expand across toners, serums, moisturizers and sun care as product pages and affiliate links are verified.</p></div></section>
+    </main>
+    <footer class="footer">RoutinePick provides shopping guidance, not medical advice. Product suitability varies by person; patch test when appropriate and check the product page for current ingredients, seller, price and availability.<br><br><strong>Amazon disclosure:</strong> As an Amazon Associate I earn from qualifying purchases.</footer>
+  </div>
+<script>
+  const state={skin:null,goal:null};
+  document.querySelectorAll('.options').forEach(group=>group.addEventListener('click',e=>{
+    if(!e.target.classList.contains('chip')) return;
+    group.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+    e.target.classList.add('active'); state[group.dataset.group]=e.target.dataset.value;
+  }));
+  const picks={
+    cosrx:{name:'COSRX Low pH Good Morning Gel Cleanser',reason:'A strong fit for a simple everyday gel-cleanser routine, especially for oily or combination skin.'},
+    anuafoam:{name:'ANUA Heartleaf Quercetinol Pore Deep Cleansing Foam',reason:'Best match here when pore-focused cleansing is the main goal.'},
+    anuaoil:{name:'ANUA Heartleaf Pore Control Cleansing Oil',reason:'Best match when the first job is removing sunscreen or makeup before your second cleanse.'},
+    boj:{name:'Beauty of Joseon Green Plum Refreshing Cleanser',reason:'A good beta pick when you prioritize a gentler-feeling everyday cleanse.'}
+  };
+  document.getElementById('matchBtn').addEventListener('click',()=>{
+    const r=document.getElementById('result');
+    if(!state.skin||!state.goal){r.style.display='block';r.innerHTML='<strong>Pick one option for both questions.</strong>';return;}
+    let id='cosrx';
+    if(state.goal==='oil') id='anuaoil'; else if(state.goal==='pores') id='anuafoam'; else if(state.goal==='gentle'||state.skin==='sensitive'||state.skin==='normal') id='boj';
+    const p=picks[id]; r.style.display='block'; r.innerHTML=`<div class="kicker">Closest beta match</div><h3 style="margin:7px 0">${p.name}</h3><div class="muted">${p.reason}</div><a class="btn primary" style="margin-top:14px" href="#picks">See the pick</a>`;
+  });
+</script>
+</body></html>
