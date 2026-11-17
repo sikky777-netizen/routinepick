@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>RoutinePick · 상품 관리자</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#162c28;background:#f1f5f2}*{box-sizing:border-box}
+body{margin:0}.wrap{max-width:1040px;margin:auto;padding:24px 16px 70px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:25px}
+h1{font-size:27px;margin:0}h2{font-size:22px;margin:0 0 12px}
+a{color:#086a61}p{line-height:1.6}small,.muted{color:#647772}
+.panel{background:white;border:1px solid #dce5e0;border-radius:17px;padding:22px;margin:17px 0}
+.field{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+input,select,button{font:inherit}input,select{padding:12px;border:1px solid #c8d6cf;border-radius:9px;background:white;min-width:0}
+input[type=text],input[type=password]{flex:1;min-width:160px}
+button{background:#127d72;color:white;border:0;border-radius:9px;padding:12px 17px;cursor:pointer;font-weight:700;min-height:46px}
+button.secondary{background:#e2eeea;color:#165c53}button.danger{background:#8b3030}
+button:disabled{opacity:.5;cursor:default}
+#notice{margin:10px 0;white-space:pre-wrap;font-weight:600;min-height:24px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.item{border:1px solid #d5e0da;border-radius:14px;padding:15px;display:flex;gap:14px;align-items:start;background:#fff}
+.item img{width:92px;height:92px;object-fit:contain;background:#f7f8f5;border-radius:8px}
+.item .info{flex:1;min-width:0}.item h3{font-size:16px;line-height:1.35;margin:0 0 6px;overflow-wrap:anywhere}
+.item .controls{display:flex;gap:8px;margin:12px 0 3px;flex-wrap:wrap}
+label{font-size:14px;font-weight:600;display:block;margin-bottom:5px}
+.item select{min-width:110px;max-width:100%;padding:9px} .item input[type=checkbox]{width:20px;height:20px;accent-color:#14766d}
+.badge{display:inline-block;background:#e1efeb;border-radius:8px;padding:4px 8px;font-size:12px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.item{gap:10px}.item img{width:76px;height:76px}.panel{padding:16px}}
+</style>
+</head>
+<body><div class="wrap">
+<header><div><h1>RoutinePick 상품 관리자</h1><small>쿠팡 파트너스 · 상품 검색과 승인 등록</small></div><a href="/">← 루틴픽으로 돌아가기</a></header>
+<div class="panel">
+<h2>1. 관리자 인증</h2>
+<p class="muted">Vercel 환경변수 ROUTINEPICK_ADMIN_TOKEN에 설정한 관리자 토큰을 입력합니다. 토큰은 이 탭에서만 보관되며 외부로 표시되지 않습니다.</p>
+<div class="field"><input id="token" type="password" autocomplete="off" placeholder="관리자 토큰"><button id="login">연결 확인</button><button class="secondary" id="logout">토큰 지우기</button></div>
+<p id="config" class="muted"></p>
+</div>
+<div class="panel">
+<h2>2. 쿠팡 상품 검색</h2>
+<p class="muted">상품 검색은 관리자만 실행합니다. 공식 가이드 기준 시간당 검색 10회 제한에 여유를 두어 이 화면에서는 최대 8회만 사용합니다. 검색된 상품은 자동 게시되지 않고 선택 후 승인 등록합니다.</p>
+<form id="searchform" class="field"><input id="keyword" type="text" placeholder="예: 약산성 클렌징폼" minlength="2" maxlength="70" required><button type="submit">상품 검색</button></form>
+<div id="search-results" class="grid" style="margin-top:16px"></div>
+<div style="margin-top:15px"><button id="publish" disabled>선택한 상품 일괄 등록</button></div>
+</div>
+<div class="panel">
+<h2>3. 현재 등록 상품</h2>
+<p class="muted">등록 결과는 비공개 Vercel Blob에 저장되며, 루틴픽 방문자에게 공개됩니다. 클렌저 역할별 추천에만 반영됩니다.</p>
+<button class="secondary" id="refresh">상품 목록 새로고침</button>
+<div id="registered" class="grid" style="margin-top:16px"></div>
+</div>
+<p id="notice" role="status"></p>
+<p class="muted">제휴 표시: 이 사이트는 쿠팡 파트너스 활동을 통해 일정액의 수수료를 제공받을 수 있습니다. 가격·배송·판매 조건은 쿠팡에서 최종 확인하세요.</p>
+</div>
+<script>
+(() => {
+ const $=id=>document.getElementById(id);
+ let token=sessionStorage.getItem('routinepick-admin-token')||'';
+ let catalog={products:[],version:0}, results=[];
+ $('token').value=token;
+ const notify=(text,error=false)=>{ $('notice').textContent=text; $('notice').style.color=error?'#a52d2d':'#09695f'; };
+ const authHeaders=()=>({'X-Routinepick-Admin':token,'Content-Type':'application/json'});
+ async function api(path,method='GET',data){
+   if(!token)throw new Error('먼저 관리자 토큰을 입력하세요.');
+   const res=await fetch(path,{method,headers:authHeaders(),cache:'no-store',...(data?{body:JSON.stringify(data)}:{})});
+   const json=await res.json().catch(()=>({}));
+   if(!res.ok)throw new Error(json.error||'요청 실패 ('+res.status+')');
+   return json;
+ }
+ const option=(value,text)=>{const o=document.createElement('option');o.value=value;o.textContent=text;return o;};
+ function productCard(p,searchMode){
+   const root=document.createElement('div');root.className='item';
+   const image=document.createElement('img');image.alt='';image.loading='lazy';if(p.image) image.src=p.image;root.append(image);
+   const info=document.createElement('div');info.className='info';
+   const title=document.createElement('h3');title.textContent=p.name;info.append(title);
+   const desc=document.createElement('div');desc.className='muted';
+   desc.textContent=searchMode?'검색 시 참고가격: '+Number(p.price||0).toLocaleString('ko-KR')+'원':'상품 ID: '+p.productId;
+   info.append(desc);
+   const link=document.createElement('a');link.href=p.url;link.target='_blank';link.rel='sponsored nofollow noopener noreferrer';link.textContent='제휴 링크 확인';info.append(link);
+   if(searchMode){
+     const check=document.createElement('input');check.type='checkbox';check.className='pick';check.setAttribute('aria-label',p.name+' 등록 선택');
+     const controls=document.createElement('div');controls.className='controls';
+     const stage=document.createElement('select');stage.className='stage';
+     stage.append(option('wash','젤·폼 세안'),option('first','1차 클렌징'));
+     const texture=document.createElement('select');texture.className='texture';
+     texture.append(option('gel','젤'),option('foam','폼'),option('oil','오일'),option('any','기타'));
+     controls.append(stage,texture);
+     root.insertBefore(check,image);info.append(controls);
+     root.dataset.pid=p.productId;
+   }else{
+     const del=document.createElement('button');del.textContent='삭제';del.className='danger';del.style.marginTop='12px';
+     del.addEventListener('click',async()=>{
+       if(!confirm('이 상품을 루틴픽 목록에서 삭제할까요?'))return;
+       try{catalog=await api('/api/admin/products','DELETE',{id:p.id,version:catalog.version});renderRegistered();notify('상품을 삭제했습니다.');}
+       catch(e){notify(e.message,true);}
+     });
+     info.append(del);
+   }
+   root.append(info);return root;
+ }
+ function renderSearch(){
+   $('search-results').replaceChildren(...results.map(p=>productCard(p,true)));
+   $('publish').disabled=!results.length;
+ }
+ function renderRegistered(){
+   $('registered').replaceChildren(...catalog.products.map(p=>productCard(p,false)));
+   if(!catalog.products.length) $('registered').textContent='등록된 쿠팡 상품이 없습니다.';
+ }
+ async function reload(){
+   catalog=await api('/api/admin/products');renderRegistered();
+ }
+ $('login').addEventListener('click',async()=>{
+   token=$('token').value.trim();
+   try{
+     const status=await api('/api/admin/status');
+     sessionStorage.setItem('routinepick-admin-token',token);
+     $('config').textContent='쿠팡 API: '+(status.coupangConfigured?'설정됨':'키 등록 필요')+' · 상품 저장소: '+(status.catalogConfigured?'설정됨':'연결 필요');
+     await reload();notify('관리자 연결을 확인했습니다.');
+   }catch(e){notify(e.message,true);}
+ });
+ $('logout').addEventListener('click',()=>{
+   sessionStorage.removeItem('routinepick-admin-token');token='';$('token').value='';
+   $('config').textContent='';$('registered').replaceChildren();$('search-results').replaceChildren();results=[];
+   notify('관리자 토큰을 지웠습니다.');
+ });
+ $('refresh').addEventListener('click',()=>reload().then(()=>notify('상품 목록을 갱신했습니다.')).catch(e=>notify(e.message,true)));
+ $('searchform').addEventListener('submit',async e=>{
+   e.preventDefault();const keyword=$('keyword').value.trim();
+   try{notify('상품을 검색하고 제휴 링크를 확인하고 있습니다.');
+     const data=await api('/api/admin/search','POST',{keyword});
+     results=data.products||[];renderSearch();
+     notify(results.length?'검색 결과 '+results.length+'개 · 검색 잔여 '+data.remaining+'회':'검색 결과가 없거나 제휴 링크를 생성하지 못했습니다.');
+   }catch(err){notify(err.message,true);}
+ });
+ $('publish').addEventListener('click',async()=>{
+   const selected=[...$('search-results').querySelectorAll('.item')].filter(el=>el.querySelector('.pick')?.checked).map(el=>{
+     const p=results.find(x=>x.productId===el.dataset.pid);
+     return {...p,stage:el.querySelector('.stage').value,texture:el.querySelector('.texture').value};
+   });
+   if(!selected.length)return notify('등록할 상품을 선택해 주세요.',true);
+   try{catalog=await api('/api/admin/products','POST',{products:selected,version:catalog.version});
+     renderRegistered();notify('쿠팡 상품 '+selected.length+'개를 등록했습니다. 루틴픽 추천 목록에 적용됩니다.');
+   }catch(e){notify(e.message,true);}
+ });
+ if(token){$('login').click();}
+})();
+</script>
+</body></html>
