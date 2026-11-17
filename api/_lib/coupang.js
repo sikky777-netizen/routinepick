@@ -33,8 +33,18 @@ async function call(method, path, body) {
       signal: ctrl.signal
     });
     const result = await response.json().catch(() => null);
-    if (!response.ok || !result || (result.rCode != null && String(result.rCode) !== '0'))
-      throw new Error('COUPANG_REQUEST_FAILED');
+    if (!response.ok || !result || (result.rCode != null && String(result.rCode) !== '0')) {
+      // Never log the Authorization header, full request URL, or credential values.
+      const error = new Error('COUPANG_UPSTREAM_ERROR');
+      error.httpStatus = response.status;
+      error.operation = method === 'GET' ? 'search' : 'deeplink';
+      error.rCode = typeof result?.rCode === 'string' && /^[a-zA-Z0-9_-]{1,20}$/.test(result.rCode)
+        ? result.rCode : null;
+      console.error('Coupang API request unsuccessful', {
+        operation: error.operation, httpStatus: error.httpStatus, rCode: error.rCode
+      });
+      throw error;
+    }
     return result.data;
   } finally { clearTimeout(timeout); }
 }
@@ -53,22 +63,53 @@ export function validAffiliateUrl(raw) {
   } catch { return false; }
 }
 
+// Search API normally returns already-attributed partner links
+// (link.coupang.com/re/AFFSDP?...). Do not reprocess these in the deeplink API.
 export async function searchCoupang(keyword, limit = 10) {
-  const query = new URLSearchParams({ keyword, limit: String(Math.max(1, Math.min(10, limit))) });
+  const query = new URLSearchParams({
+    keyword,
+    limit: String(Math.max(1, Math.min(10, limit)))
+  });
   const data = await call('GET', SEARCH + '?' + query.toString());
-  const found = Array.isArray(data?.productData) ? data.productData : Array.isArray(data) ? data : [];
-  const records = found.filter(x => x && /^\d+$/.test(String(x.productId)) && validProductUrl(x.productUrl)).slice(0, 10);
-  if (!records.length) return [];
-  // Deep links are obtained from Coupang, never invented by the app.
-  const converted = await call('POST', DEEPLINK, { coupangUrls: records.map(x => x.productUrl) });
-  const links = Array.isArray(converted) ? converted : [];
-  const linkFor = new Map(links.filter(x => x && validAffiliateUrl(x.shortenUrl)).map(x => [x.originalUrl, x.shortenUrl]));
+  const found = Array.isArray(data?.productData)
+    ? data.productData : Array.isArray(data) ? data : [];
+
+  const records = found
+    .filter(x => x && /^\\d+$/.test(String(x.productId)) && validProductUrl(x.productUrl))
+    .slice(0, 10);
+
+  // The product search endpoint itself can produce valid affiliate URLs.
+  // Only plain coupang.com URLs need a separate deeplink conversion.
+  const missingLinks = records.filter(x => !validAffiliateUrl(x.productUrl));
+  const convertedLinks = new Map();
+
+  if (missingLinks.length) {
+    try {
+      const converted = await call('POST', DEEPLINK, {
+        coupangUrls: missingLinks.map(x => x.productUrl)
+      });
+      if (Array.isArray(converted)) {
+        for (const x of converted) {
+          if (x && validAffiliateUrl(x.shortenUrl)) {
+            convertedLinks.set(x.originalUrl, x.shortenUrl);
+          }
+        }
+      }
+    } catch (e) {
+      // Preserve valid search-returned affiliate links even if optional conversion
+      // fails for unrelated ordinary product URLs.
+      console.error('Optional Coupang deeplink conversion unavailable', {
+        httpStatus: e.httpStatus || null,
+        operation: 'deeplink'
+      });
+    }
+  }
   return records.map(x => ({
     productId: String(x.productId),
     name: String(x.productName || '').slice(0, 180),
-    image: /^https:\/\//.test(x.productImage || '') ? String(x.productImage) : '',
+    image: /^https:\\/\\//.test(x.productImage || '') ? String(x.productImage) : '',
     price: Number(x.productPrice) || 0,
-    url: linkFor.get(x.productUrl) || '',
+    url: validAffiliateUrl(x.productUrl) ? x.productUrl : (convertedLinks.get(x.productUrl) || ''),
     rocket: Boolean(x.isRocket),
     freeShipping: Boolean(x.isFreeShipping)
   })).filter(x => x.name && validAffiliateUrl(x.url));
