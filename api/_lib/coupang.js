@@ -75,7 +75,7 @@ export async function searchCoupang(keyword, limit = 10) {
     ? data.productData : Array.isArray(data) ? data : [];
 
   const records = found
-    .filter(x => x && /^\\d+$/.test(String(x.productId)) && validProductUrl(x.productUrl))
+    .filter(x => x && Number.isSafeInteger(Number(x.productId)) && Number(x.productId) > 0 && validProductUrl(x.productUrl))
     .slice(0, 10);
 
   // The product search endpoint itself can produce valid affiliate URLs.
@@ -107,7 +107,7 @@ export async function searchCoupang(keyword, limit = 10) {
   return records.map(x => ({
     productId: String(x.productId),
     name: String(x.productName || '').slice(0, 180),
-    image: /^https:\\/\\//.test(x.productImage || '') ? String(x.productImage) : '',
+    image: String(x.productImage || '').startsWith('https://') ? String(x.productImage) : '',
     price: Number(x.productPrice) || 0,
     url: validAffiliateUrl(x.productUrl) ? x.productUrl : (convertedLinks.get(x.productUrl) || ''),
     rocket: Boolean(x.isRocket),
